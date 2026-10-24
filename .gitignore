@@ -1,2 +1,7 @@
 /data/Bay_Area_Dasymetric_Population_Estimates.gpkg
 /data/CA_SFBay_slr_final_dist.gpkg
+
+# local python env for scripts/ -- see requirements.txt
+.venv/
+__pycache__/
+*.pyc
