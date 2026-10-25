@@ -106,13 +106,18 @@ dasymetric population dataset is 2017-2021 ACS.
   to be reconciled, the station-specific offsets used, and known gaps in
   the tide gauge data uncovered while pulling it. Written in response to
   Mei's MTC feedback on vertical datum handling.
+- `scenario_water_level.md` -- the highest predicted King Tide this
+  winter (2026-27) + the 1 ft El Niño bump, expressed as height above
+  MHHW, and which NOAA SLR raster scenario that picks (**2.5 ft**).
+  Computed by `scripts/calc_scenario_water_level.py`.
 
 ### Still needed (not built yet)
 
-NOAA SLR inundation vectors (gitignored, download locally) and the SFEI
-dasymetric population estimates (gitignored, download locally) still need
-manual downloads per the planning doc. The actual El Niño-bump-vs-neutral-
-winter comparison and building the 2026-27 forward water-level scenario
-(King Tide + El Niño, on top of the predictions above) are analysis steps
-that haven't been done -- see the project planning doc and
+NOAA SLR inundation vectors (gitignored, download locally -- now that
+`docs/scenario_water_level.md` says which scenario to grab, 2.5 ft) and
+the SFEI dasymetric population estimates (gitignored, download locally)
+still need manual downloads per the planning doc. The actual El Niño-
+bump-vs-neutral-winter *empirical* comparison (this used Mei's ~1 ft
+figure directly, not a measured value from RONI + the historical winters)
+hasn't been done -- see the project planning doc and
 `docs/datum_handling.md`'s "still open" notes.
