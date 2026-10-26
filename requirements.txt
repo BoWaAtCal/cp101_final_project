@@ -6,3 +6,4 @@ py7zr==1.1.4
 pyogrio==0.13.0
 pyproj==3.8.0
 shapely==2.2.0
+matplotlib==3.10.9
