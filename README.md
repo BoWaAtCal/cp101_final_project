@@ -137,6 +137,27 @@ levels are in MHHW, a station-local tidal datum, not an elevation.
   MHHW, and which NOAA SLR raster scenario that picks (**2.5 ft**).
   Computed by `scripts/calc_scenario_water_level.py`.
 
+### Figures (`outputs/`)
+
+- `exposure_map_2_5ft.png`: Map of how many people would be exposed in
+  each OLU at 2.5 ft above MHHW, next to a bar chart of the 12 OLUs with
+  the most people exposed. Dark red marks people living in
+  high-vulnerability tracts (SVI 0.75 or higher). Suisun and Carquinez are
+  hatched because NOAA's SF Bay file doesn't cover them. Across the Bay,
+  about 78,000 people are exposed, around 11,000 of them in
+  high-vulnerability tracts. San Rafael has the most people exposed
+  (about 13,000), and about half of them are in high-vulnerability tracts.
+
+- `historical_analysis/el_nino_historical_visualizations.png`: Four
+  panels on the El Niño side of the project. Top left compares water
+  levels in three past El Niño winters to nearby normal winters. Only
+  1982-83 went past our +1 ft assumption, and 2015-16 barely moved.
+  Top right plots El Niño strength (RONI) against the high-water bump.
+  With only three winters, this just describes those events and can't
+  be used to predict anything. Bottom left shows predicted tide peaks
+  for this winter, which are highest in December and January. Bottom
+  right ranks the OLUs by people exposed.
+
 ### Work In Progress (not built yet)
 
 Block-group polygons + ACS population (input for `exposure_by_olu.py`),
