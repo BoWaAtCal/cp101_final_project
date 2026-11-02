@@ -90,6 +90,7 @@ python scripts/fetch_2026_27_predictions.py
 python scripts/calc_scenario_water_level.py
 python scripts/exposure_by_olu.py
 python scripts/make_exposure_map.py
+python scripts/run_historical_analysis.py
 python scripts/visualize_historical_analysis.py
 ```
 
