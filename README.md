@@ -1,8 +1,12 @@
 # CYPLAN 101 - Final Project
 
-Bay Area flood-hotspot ranking: a King Tide + El Niño water-level scenario
-applied to NOAA SLR inundation maps, overlaid with people, vulnerability,
-and roads - ranked and mapped by **OLU** (Operational Landscape Unit), SFEI's ~30 shoreline segments.
+This project looks at which parts of the Bay Area shoreline are most at risk
+of flooding during a King Tide in an El Niño winter. We used NOAA's sea level
+rise inundation maps to estimate flooding, then checked how many people
+(including more vulnerable populations) and how many miles of road fall
+inside the flooded areas. Results are ranked and mapped by SFEI's 30
+Operational Landscape Units (OLUs), which split the Bay shoreline into
+segments.
 
 ## Setup
 
@@ -79,13 +83,14 @@ them yourself per the project doc, they're too big for the repo):
 Run from the repo root with the venv active:
 
 ```bash
-python scripts/extract_olu.py
-python scripts/clip_svi.py
-python scripts/prep_roads.py
+python data_processing.py
+python scripts/prep_block_groups.py
 python scripts/fetch_tide_levels.py
-python scripts/fetch_bay_trail.py
 python scripts/fetch_2026_27_predictions.py
+python scripts/calc_scenario_water_level.py
 python scripts/exposure_by_olu.py
+python scripts/make_exposure_map.py
+python scripts/visualize_historical_analysis.py
 ```
 
 ### `data/processed/`
@@ -132,7 +137,7 @@ levels are in MHHW, a station-local tidal datum, not an elevation.
   MHHW, and which NOAA SLR raster scenario that picks (**2.5 ft**).
   Computed by `scripts/calc_scenario_water_level.py`.
 
-### Still needed (not built yet)
+### Work In Progress (not built yet)
 
 Block-group polygons + ACS population (input for `exposure_by_olu.py`),
 NOAA SLR inundation vectors (gitignored, download locally -- now that
