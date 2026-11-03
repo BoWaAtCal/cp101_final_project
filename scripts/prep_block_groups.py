@@ -40,8 +40,9 @@ BAY_AREA_COUNTY_FIPS = ["001", "013", "041", "055", "075", "081", "085", "095", 
 
 def main():
     bg = gpd.read_file(f"zip://{RAW / 'tl_2022_06_bg.zip'}")
+    n_ca = len(bg)
     bg = bg[bg["COUNTYFP"].isin(BAY_AREA_COUNTY_FIPS)][["GEOID", "COUNTYFP", "ALAND", "AWATER", "geometry"]]
-    print(f"{len(bg):,} Bay Area block groups in TIGER")
+    print(f"{n_ca:,} California block groups in TIGER -> {len(bg):,} Bay Area block groups")
 
     acs = pd.read_csv(RAW / "acs2022_b01003_bayarea_blockgroups.csv", dtype={"GEO_ID": str})
     acs["GEOID"] = acs["GEO_ID"].str.split("US").str[1]

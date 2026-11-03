@@ -112,8 +112,12 @@ def load_flood(args, olu):
         print(f"  {name}: {len(gdf):,} polygons")
         frames.append(gdf.to_crs(TARGET_CRS)[["geometry"]])
     flood = gpd.GeoDataFrame(pd.concat(frames, ignore_index=True), crs=TARGET_CRS)
+    n_invalid = (~flood.is_valid).sum()
     flood["geometry"] = shapely.make_valid(flood.geometry.values)
+    n_before = len(flood)
     flood = flood[flood.geom_type.isin(["Polygon", "MultiPolygon", "GeometryCollection"])]
+    print(f"  cleaning: repaired {n_invalid:,} invalid polygons, "
+          f"dropped {n_before - len(flood):,} non-polygon pieces ({len(flood):,} kept)")
 
     # One flood polygon per OLU. Dissolving first means overlapping NOAA
     # polygons (or slr + low) are never counted twice.
@@ -127,6 +131,7 @@ def load_flood(args, olu):
 def load_population(args, svi):
     svi = svi.copy()
     svi["svi"] = svi["RPL_THEMES"].where(svi["RPL_THEMES"] >= 0)  # -999 -> NaN
+    print(f"  cleaning: {svi['svi'].isna().sum()} of {len(svi):,} SVI tracts have no score (-999 -> NaN)")
 
     if args.block_groups.exists():
         bg = gpd.read_file(args.block_groups).to_crs(TARGET_CRS)

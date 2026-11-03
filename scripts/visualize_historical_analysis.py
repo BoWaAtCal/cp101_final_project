@@ -4,7 +4,7 @@ Run from the repository root:
     python scripts/visualize_historical_analysis.py
 
 The script reads the compact CSV outputs produced by
-``run_historical_analysis.py`` and writes a single PNG dashboard.
+``scripts/run_historical_analysis.py`` and writes a single PNG dashboard.
 """
 
 from pathlib import Path
@@ -85,6 +85,7 @@ def main():
     )
     axis.axhline(1.0, color=NAVY, linewidth=1.4, linestyle="--", label="+1-ft assumption")
     axis.set_xticks(x, events["event_winter"])
+    axis.set_xlabel("El Niño winter (Nov–Mar)")
     axis.set_ylabel("Anomaly versus matched neutral winter (ft)")
     axis.set_title("A. High-water anomalies by El Niño winter")
     axis.set_ylim(0, max(1.45, events["max_anomaly_ft"].max() + 0.2))
@@ -123,11 +124,12 @@ def main():
     axis.set_title(f"B. RONI and high-water anomaly (r={correlation:.2f}, n=3)")
     axis.text(
         0.02,
-        0.03,
+        0.96,
         "Descriptive only: three similarly strong events do not support a predictive slope.",
         transform=axis.transAxes,
         fontsize=8.5,
         color=GRAY,
+        va="top",
     )
     axis.grid(color=GRID, linewidth=0.7)
     axis.set_axisbelow(True)
@@ -150,6 +152,7 @@ def main():
             color=color,
             label=station,
         )
+    axis.set_xlabel("Month (2026–27 winter)")
     axis.set_ylabel("Monthly maximum (ft above MHHW)")
     axis.set_title("C. 2026–27 predicted astronomical tide peaks")
     axis.legend(frameon=False, ncol=2, fontsize=8)
@@ -170,7 +173,7 @@ def main():
 
     figure.text(
         0.01,
-        0.005,
+        -0.01,
         "Historical baseline: nearest preceding neutral winter at the same station. "
         "Predictions are astronomical tides, not storm-surge forecasts. Population exposure is area-weighted by block group.",
         fontsize=8.5,

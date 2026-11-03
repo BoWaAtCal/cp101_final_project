@@ -85,14 +85,64 @@ Run from the repo root with the venv active:
 ```bash
 python data_processing.py
 python scripts/prep_block_groups.py
-python scripts/fetch_tide_levels.py
-python scripts/fetch_2026_27_predictions.py
 python scripts/calc_scenario_water_level.py
 python scripts/exposure_by_olu.py
 python scripts/make_exposure_map.py
 python scripts/run_historical_analysis.py
 python scripts/visualize_historical_analysis.py
 ```
+
+The NOAA / MTC download scripts (`fetch_tide_levels.py`,
+`fetch_2026_27_predictions.py`, `fetch_bay_trail.py`) are optional: their
+outputs are already saved in `data/raw/` and `data/processed/`, and
+re-running them needs internet access and overwrites those files with
+whatever the APIs return today.
+
+`run_historical_analysis.py` compares each historical El Niño winter
+(1982-83, 1997-98, 2015-16) against the nearest preceding ENSO-neutral
+winter (all of NDJ, DJF, JFM RONI within ±0.5) at the same station, and
+writes the CSVs that `visualize_historical_analysis.py` plots. The neutral
+winters' tide data (1981-82, 1996-97, 2013-14) are saved in
+`data/raw/tide_levels/`, so it runs offline.
+
+### Where the data comes from
+
+| File in `data/` | Source | How to get it |
+|---|---|---|
+| `CA_SFBay_slr_final_dist.gpkg` (gitignored) | NOAA OCM Sea Level Rise inundation vectors, San Francisco Bay | Manual download from https://coast.noaa.gov/slrdata/ (California → SF Bay, vector GeoPackage); metadata in `data/NOAA_OCM_SLR_Data_README.txt` |
+| `Bay_Area_Dasymetric_Population_Estimates.gpkg` (gitignored) | SFEI dasymetric population | Manual download per the project doc; not used by the current scripts |
+| `Adaptation_Atlas_Data_SFEI_v3_2021.mpk` | SFEI Adaptation Atlas (OLUs) | Committed; from http://www.sfei.org/data/adaptation-atlas-data |
+| `SVI2022_CALIFORNIA_tract.gdb` | CDC/ATSDR Social Vulnerability Index 2022, California tracts | Committed; from https://www.atsdr.cdc.gov/placeandhealth/svi/data_documentation_download.html |
+| `Roads/tl_2025_<county>_roads.zip` | Census TIGER/Line 2025 roads, 9 counties | Committed; from https://www2.census.gov/geo/tiger/TIGER2025/ROADS/ |
+| `raw/census/` | TIGER 2022 block groups + ACS 2018-22 table B01003 | Committed; URLs in `scripts/prep_block_groups.py` |
+| `raw/tide_levels/`, `raw/RONI.ascii.txt` | NOAA CO-OPS API, NOAA CPC | Downloaded by `fetch_tide_levels.py`, `fetch_2026_27_predictions.py`, `run_historical_analysis.py` |
+| `raw/bay_trail.geojson` | MTC Bay Trail feature service | Downloaded by `fetch_bay_trail.py` |
+
+## Data cleaning
+
+Every step that removes, filters or fixes rows, with the counts from a
+full run. The scripts print these counts when they run.
+
+| Step | Script | What was done | Rows before → after | Rows affected |
+|---|---|---|---|---|
+| OLUs | `data_processing.py` | Kept only the `Primary` component (dropped `Submerged` and `Contributing watershed`) | 89 → 30 | 59 removed |
+| SVI tracts | `data_processing.py` | Kept the 9 Bay Area counties (by `STCNTY` FIPS) | 9,109 → 1,765 | 7,344 removed |
+| SVI scores | `exposure_by_olu.py` | `RPL_THEMES` = -999 ("no data") set to missing, so it isn't read as a real score | 1,765 | 9 tracts fixed |
+| Block groups | `prep_block_groups.py` | Kept the 9 Bay Area counties (by `COUNTYFP`) | 25,607 → 5,187 | 20,420 removed |
+| Block-group population | `prep_block_groups.py` | Joined ACS population to block-group shapes | 5,187 | 0 unmatched in either direction |
+| Block-group SVI | `exposure_by_olu.py` | Joined tract SVI to block groups; no score = never counted as high-vulnerability | 5,187 | 16 with no SVI score |
+| Roads | `data_processing.py` | Merged 9 county files, reprojected; nothing removed | 151,426 → 151,426 | 0 |
+| Bay Trail | `fetch_bay_trail.py`, `exposure_by_olu.py` | Checked for the known segment-4032 duplicate in the source and again after the OLU join | 683 → 683 | 0 duplicates |
+| NOAA flood polygons (2.5 ft) | `exposure_by_olu.py` | Repaired invalid geometries, dropped non-polygon pieces | 1,523 → 1,523 | 0 |
+| Tide observations | `fetch_tide_levels.py` | Dropped hours with a blank water level | 48,744 → 48,744 | 0 blank hours |
+| Tide observations | `fetch_tide_levels.py` | Station-winters NOAA has no data for | 16 → 14 | 2 missing (Richmond and Redwood City 1982-83) |
+| Tide predictions | `fetch_2026_27_predictions.py` | Dropped blank predictions | 2,332 → 2,332 | 0 |
+| Neutral-winter tides | `run_historical_analysis.py` | Dropped blank hours; skipped station pairs with no data | Alameda 1996-97: 3,623 → 3,456 | 167 blank hours; 3 station comparisons skipped |
+| All layers | all scripts | Reprojected to EPSG:26910; water levels converted MHHW → NAVD88 per station (`docs/datum_handling.md`) | — | values changed, no rows removed |
+
+Known gap kept as-is: San Francisco 2023-24 has only 1,464 hourly
+observations (Nov-Dec 2023), versus about 3,648 for a full winter, because
+NOAA has no verified data after Dec 31, 2023.
 
 ### `data/processed/`
 
@@ -140,6 +190,19 @@ levels are in MHHW, a station-local tidal datum, not an elevation.
 
 ### Figures (`outputs/`)
 
+One map and five charts, each with a one-sentence caption:
+
+| Figure | Caption |
+|---|---|
+| `exposure_map_2_5ft.png`, left (map) | People living in the 2.5 ft-above-MHHW flood extent in each OLU, area-weighted from block groups (Suisun and Carquinez hatched: no NOAA SF Bay coverage). |
+| `exposure_map_2_5ft.png`, right (bar chart) | The 12 OLUs with the most people exposed at 2.5 ft, split into people in high-vulnerability tracts (SVI ≥ 0.75) and everyone else, with flooded road and Bay Trail miles. |
+| `historical_analysis/el_nino_historical_visualizations.png`, A | How much higher the 95th-percentile and maximum hourly water levels (ft) were in three past El Niño winters than in the nearest neutral winter, against our +1 ft assumption. |
+| same, B | Winter El Niño strength (RONI) against the 95th-percentile high-water anomaly (ft) for the three events, which is descriptive only with n = 3. |
+| same, C | Monthly maximum predicted astronomical high tide (ft above MHHW) at the four stations for Nov 2026-Mar 2027, peaking in December. |
+| same, D | The 10 OLUs with the most people exposed under the 2.5 ft scenario. |
+
+More detail:
+
 - `exposure_map_2_5ft.png`: Map of how many people would be exposed in
   each OLU at 2.5 ft above MHHW, next to a bar chart of the 12 OLUs with
   the most people exposed. Dark red marks people living in
@@ -161,12 +224,9 @@ levels are in MHHW, a station-local tidal datum, not an elevation.
 
 ### Work In Progress (not built yet)
 
-Block-group polygons + ACS population (input for `exposure_by_olu.py`),
-NOAA SLR inundation vectors (gitignored, download locally -- now that
-`docs/scenario_water_level.md` says which scenario to grab, 2.5 ft) and
-the SFEI dasymetric population estimates (gitignored, download locally)
-still need manual downloads per the planning doc. The actual El Niño-
-bump-vs-neutral-winter *empirical* comparison (this used Mei's ~1 ft
-figure directly, not a measured value from RONI + the historical winters)
-hasn't been done -- see the project planning doc and
-`docs/datum_handling.md`'s "still open" notes.
+Population is still area-weighted by block group; swapping in the SFEI
+dasymetric estimates (gitignored, download locally) is step 11. The
+exposure scenario still uses Mei's ~1 ft El Niño figure directly. The
+historical comparison (`run_historical_analysis.py`) measured 0.27-0.69 ft
+at the 95th percentile, so that assumption is not yet replaced by a
+measured value -- see `docs/datum_handling.md`'s "still open" notes.

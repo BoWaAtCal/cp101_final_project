@@ -104,12 +104,13 @@ def main():
                 continue
 
             reader = csv.DictReader(io.StringIO(raw_csv))
-            n = 0
+            n = skipped = 0
             for row in reader:
                 # CO-OPS hourly_height CSV columns: "Date Time", " Water Level", ...
                 ts_key = "Date Time" if "Date Time" in row else list(row.keys())[0]
                 wl_key = next((k for k in row if "Water Level" in k), None)
                 if wl_key is None or not row[wl_key].strip():
+                    skipped += 1
                     continue
                 mhhw_val = float(row[wl_key])
                 combined_rows.append(
@@ -124,7 +125,7 @@ def main():
                     }
                 )
                 n += 1
-            print(f"  {name:<15} {winter}  {n} hourly obs")
+            print(f"  {name:<15} {winter}  {n} hourly obs ({skipped} blank readings dropped)")
             time.sleep(0.3)
 
     out_path = PROCESSED_DIR / "tide_levels_navd88.csv"

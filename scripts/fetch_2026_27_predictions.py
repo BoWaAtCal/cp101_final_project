@@ -81,12 +81,13 @@ def main():
             continue
 
         reader = csv.DictReader(io.StringIO(raw_csv))
-        n = 0
+        n = skipped = 0
         for row in reader:
             ts_key = "Date Time" if "Date Time" in row else list(row.keys())[0]
             pred_key = next((k for k in row if "Prediction" in k), None)
             type_key = next((k for k in row if "Type" in k), None)
             if pred_key is None or not row[pred_key].strip():
+                skipped += 1
                 continue
             mhhw_val = float(row[pred_key])
             combined_rows.append(
@@ -101,7 +102,7 @@ def main():
                 }
             )
             n += 1
-        print(f"  {name:<15} {n} high/low predictions")
+        print(f"  {name:<15} {n} high/low predictions ({skipped} blank rows dropped)")
         time.sleep(0.3)
 
     out_path = PROCESSED_DIR / "tide_predictions_2026_27_navd88.csv"
